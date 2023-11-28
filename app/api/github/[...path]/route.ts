@@ -3,12 +3,13 @@ export async function GET(
   { params }: { params: { path: string[] } },
 ) {
   const githubPath = params.path.join('/')
-  const res = await fetch(`https://raw.githubusercontent.com/${githubPath}`, {
-    headers: {
-      'Authorization': `Bearer ${process.env.GITHUB_TOKEN}`,
-    },
-  })
+  const token = process.env.GITHUB_TOKEN
+  const options = token ? {
+    headers: {Authorization: `Bearer ${token}`},
+  } : undefined
+
+  const res = await fetch(`https://raw.githubusercontent.com/${githubPath}`, options)
   const data = await res.blob()
- 
+
   return new Response(data)
 }
