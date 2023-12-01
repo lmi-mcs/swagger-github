@@ -9,7 +9,7 @@ export default function Home({ params }: { params: { path: string[] } }) {
 
   return (
     <main className="">
-      <SwaggerUI url={`/api/github/${githubPath}`} deepLinking={true} />
+      <SwaggerUI url={`/api/github/${githubPath}`} />
     </main>
   )
 }
