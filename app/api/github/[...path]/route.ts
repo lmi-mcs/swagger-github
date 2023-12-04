@@ -16,7 +16,7 @@ export async function GET(
   const githubPath = params.path.join('/')
   const options = httpClientOptions()
 
-  const url = `https://raw.githubusercontent.com/${githubPath}`
+  const url = new URL(githubPath, 'https://raw.githubusercontent.com')
   const res = await fetch(url, options)
 
   const status = res.status
@@ -32,7 +32,7 @@ export async function GET(
   // 環境変数 "RESOLVE_ALL_REFS" が "true" の場合にのみ、"$ref" の展開 (一括返還) を行う.
   const data = (process.env.RESOLVE_ALL_REFS !== 'true')
     ? await res.blob() 
-    : await resolveAllRefs(await res.text(), url)
+    : await resolveAllRefs(await res.text(), url.toString())
 
   return new Response(
     data,
