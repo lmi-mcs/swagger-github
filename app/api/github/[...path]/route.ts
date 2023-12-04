@@ -81,7 +81,7 @@ async function resolveAllRefs(text: string, rootUrl: string): Promise<string> {
 
   // call recursively.
   // 引数の Object tree `obj` を副作用で直接書き換えている.
-  await resolveRefsRecursively(obj, rootUrl)
+  await resolveRefsRecursively(obj, rootUrl, parse)
 
   return dumps(obj)
 }
@@ -92,9 +92,15 @@ async function resolveAllRefs(text: string, rootUrl: string): Promise<string> {
  *
  * @param obj 捜査する Object. (再帰)
  * @param rootUrl ↑obj の GitHub Raw URL. ("$ref" が相対パスの場合に絶対URLを特定するのに使う)
+ * @param parse Parser function for JSON / YAML.
  * @param [depth=0] 再帰の深さ. 無限ループにならないようにする為に制限を設ける.
  */
-async function resolveRefsRecursively(obj: any, rootUrl: string, depth = 0) {
+async function resolveRefsRecursively(
+  obj: any, 
+  rootUrl: string, 
+  parse: (s: string) => any, 
+  depth = 0,
+) {
   // Object の key になっている "$ref" しか解決しない.
   if (typeof obj !== 'object') {
     return
@@ -110,7 +116,7 @@ async function resolveRefsRecursively(obj: any, rootUrl: string, depth = 0) {
   for (const key in obj) {
     // "$ref" じゃない要素は、次 (子供) の再帰呼び出しへ.
     if (key !== '$ref') {
-      await resolveRefsRecursively(obj[key], rootUrl, depth + 1)
+      await resolveRefsRecursively(obj[key], rootUrl, parse, depth + 1)
       continue
     }
 
@@ -136,10 +142,10 @@ async function resolveRefsRecursively(obj: any, rootUrl: string, depth = 0) {
     Object.keys(obj).forEach(key => delete obj[key])
 
     // add new ones.
-    const part = load(await res.text())
+    const part = parse(await res.text())
     Object.assign(obj, part)
 
     // obj を更新したので、再度同じ obj を捜査する.
-    await resolveRefsRecursively(obj, url.toString(), depth)
+    await resolveRefsRecursively(obj, url.toString(), parse, depth)
   }
 }
