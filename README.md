@@ -1,38 +1,148 @@
+[GitHub]:https://github.com/
+[SwaggerUI]:https://swagger.io/tools/swagger-ui/
+[volta]:https://volta.sh/
+[Personal Access Token]:https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens
+
 # swagger-github
 
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+This is a project for displaying OpenAPI 3.0 specification files hosted on [GitHub] using [SwaggerUI] in HTML format.
 
-## Getting Started
+It allows you to specify any specification file via URL:
 
-First, run the development server:
+* Any GitHub repository
+* Any git branch
+* Any `*.json` / `*.yaml` file located at any path
+
+## Demo on Vercel
+
+https://swagger-github.vercel.app/OAI/OpenAPI-Specification/main/examples/v3.0/petstore.yaml
+
+## How to use
+
+URL Format:
+
+```
+http(s)://your.domain/{owner}/{repo}/{branch}/{path_to_spec}
+```
+
+For example, if you want to display the following OpenAPI 3.0 specification using SwaggerUI.
+
+https://raw.githubusercontent.com/OAI/OpenAPI-Specification/main/examples/v3.0/petstore.yaml
+
+In that case, you can view the SwaggerUI by accessing the following URL:
+
+https://swagger-github.vercel.app/OAI/OpenAPI-Specification/main/examples/v3.0/petstore.yaml
+
+## Environment Variables
+
+| Name | Description | Default |
+|:------|:-------------|:---------|
+| GITHUB_TOKEN | Using to access Private GitHub Repository.<br/>e.g. [Personal Access Token] |  |
+| RESOLVE_ALL_REFS | Resolve all `$ref` references on Server-Side. | `false` |
+| RESOLVE_ALL_REFS_DEPTH_LIMIT | This is the limit value for the depth of nesting in a YAML / JSON structure for `RESOLVE_ALL_REFS=true` | `30` |
+
+## Sequence Diagram
+
+```mermaid
+sequenceDiagram
+  participant Browser as Browser<br/>(SwaggerUI)
+  participant Next as Next.js
+  participant GF as GitHub<br/>(raw.githubusercontent.com)
+
+  Browser->>+Next: http://{host}/
+
+  Next-->>-Browser: Static (SwaggerUI)
+
+  Browser->>+Next: http://{host}/api/github/...
+  Next->>+GF: with/without Access Token
+
+  GF-->>-Next: YAML / JSON file.
+  Next-->>-Browser: YAML / JSON file.
+
+  Browser->>+Browser: Render
+```
+
+## Getting Started (Dev)
+
+First, install Node.js `v20.10.0`, or [volta].
+
+```bash
+node -v
+# v20.10.0
+```
+
+Install Node.js modules.
+
+```bash
+npm install
+```
+
+Run the development server:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Deploy
 
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
+This application does not have security measures in place. **It is strongly recommended not to make it available on the internet**, and to use private networks or IP address restrictions instead.
 
-## Learn More
+### Deploy on Server
 
-To learn more about Next.js, take a look at the following resources:
+Build and start the server.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+npm run build
+npm run start
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
+Open [http://{server-ip-address}:3000](http://localhost:3000) with your browser to see the result.
 
-## Deploy on Vercel
+### Deploy on Vercel
 
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+
+### Deploy on AWS Amplify
+
+sequenceDiagram
+    Alice->>John: Hello John, how are you?
+    John-->>Alice: Great!
+    Alice-)John: See you later!
+
+How to deploy Next.js with AWS Amplify.
+
+* [English](https://docs.aws.amazon.com/amplify/latest/userguide/deploy-nextjs-app.html)
+* [日本語](https://docs.aws.amazon.com/ja_jp/amplify/latest/userguide/deploy-nextjs-app.html)
+
+Then, enforce IP address restrictions by using CloudFront & WAF.
+
+* [English](https://docs.aws.amazon.com/prescriptive-guidance/latest/patterns/enable-aws-waf-for-web-applications-hosted-by-aws-amplify.html)
+* [日本語](https://docs.aws.amazon.com/ja_jp/prescriptive-guidance/latest/patterns/enable-aws-waf-for-web-applications-hosted-by-aws-amplify.html)
+
+```mermaid
+sequenceDiagram
+  participant Browser as Browser<br/>(SwaggerUI)
+  participant CF as CloudFront<br/>(WAF)
+  participant AMP as AWS Amplify
+  participant GF as GitHub<br/>(raw.githubusercontent.com)
+
+  Browser->>+CF: http://{host}/
+  CF->>+AMP: Basic Authentication
+
+  AMP-->>-CF: Static (SwaggerUI)
+  CF-->>-Browser: Static (SwaggerUI)
+
+  Browser->>+CF: http://{host}/api/github/...
+  CF->>+AMP: Basic Authentication
+  AMP->>+GF: with/without Access Token
+
+  GF-->>-AMP: YAML / JSON file.
+  AMP-->>-CF: YAML / JSON file.
+  CF-->>-Browser: YAML / JSON file.
+
+  Browser->>+Browser: Render
+```
