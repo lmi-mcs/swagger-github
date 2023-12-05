@@ -108,11 +108,6 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/deploym
 
 ### Deploy on AWS Amplify
 
-sequenceDiagram
-    Alice->>John: Hello John, how are you?
-    John-->>Alice: Great!
-    Alice-)John: See you later!
-
 How to deploy Next.js with AWS Amplify.
 
 * [English](https://docs.aws.amazon.com/amplify/latest/userguide/deploy-nextjs-app.html)

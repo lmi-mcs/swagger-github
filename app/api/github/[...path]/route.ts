@@ -120,9 +120,14 @@ async function resolveRefsRecursively(
       continue
     }
 
-    const url = obj[key].startsWith('http')
-      ? new URL(obj[key])
-      : new URL(obj[key], rootUrl)
+    const ref = obj[key]
+
+    // 外部ドメイン参照 URL は展開しない.
+    if (ref.startsWith('http')) {
+      return
+    }
+
+    const url = new URL(ref, rootUrl)
 
     // URL が hash を参照している場合は展開しない. 無限ループになってしまう.
     if (url.toString().includes('#')) {
@@ -139,6 +144,8 @@ async function resolveRefsRecursively(
     }
 
     // remove all keys.
+    // [Reference Object] https://swagger.io/specification/#reference-object
+    // > "This object cannot be extended with additional properties and any properties added SHALL be ignored."
     Object.keys(obj).forEach(key => delete obj[key])
 
     // add new ones.
