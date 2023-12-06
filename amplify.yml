@@ -8,7 +8,8 @@ frontend:
         - npm ci
     build:
       commands:
-        - echo "GITHUB_TOKEN=$GITHUB_TOKEN" >> .env
+        - echo "BEARER_TOKEN=$BEARER_TOKEN" >> .env
+        - echo "PROXY_DOMAIN=$PROXY_DOMAIN" >> .env
         - echo "RESOLVE_ALL_REFS=$RESOLVE_ALL_REFS" >> .env
         - echo "RESOLVE_ALL_REFS_DEPTH_LIMIT=$RESOLVE_ALL_REFS_DEPTH_LIMIT" >> .env
         - npm run build

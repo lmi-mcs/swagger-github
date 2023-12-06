@@ -37,7 +37,8 @@ https://swagger-github.vercel.app/OAI/OpenAPI-Specification/main/examples/v3.0/p
 
 | Name | Description | Default |
 |:------|:-------------|:---------|
-| GITHUB_TOKEN | Using to access Private GitHub Repository.<br/>e.g. [Personal Access Token] |  |
+| BEARER_TOKEN | Authorization Bearer Token for accessing `PROXY_DOMAIN`.<br/>e.g. GitHub [Personal Access Token] |  |
+| PROXY_DOMAIN | Specify the domain where the YAML/JSON files are stored. The server will perform HTTP proxy access to this domain. | `raw.githubusercontent.com` |
 | RESOLVE_ALL_REFS | Resolve all `$ref` references on Server-Side. | `false` |
 | RESOLVE_ALL_REFS_DEPTH_LIMIT | This is the limit value for the depth of nesting in a YAML / JSON structure for `RESOLVE_ALL_REFS=true` | `30` |
 

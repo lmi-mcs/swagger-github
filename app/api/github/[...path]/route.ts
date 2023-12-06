@@ -15,7 +15,7 @@ export async function GET(
 ) {
   const githubPath = params.path.join('/')
   const options = httpClientOptions()
-  const url = new URL(githubPath, 'https://raw.githubusercontent.com')
+  const url = new URL(githubPath, process.env.PROXY_DOMAIN)
   const ext = url.pathname.split('.').pop()
 
   // For security purpose, allowed extensions: json / yaml / yml
@@ -40,10 +40,12 @@ export async function GET(
 }
 
 /**
- * @returns GitHub の Raw URL にアクセスする際に必要な認証オプション.
+ * GitHub の Raw URL にアクセスする際に必要な認証オプション.
+ *
+ * @returns "Authorization: Bearer {token}" header.
  */
 function httpClientOptions(): Object | undefined {
-  const token = process.env.GITHUB_TOKEN
+  const token = process.env.BEARER_TOKEN
   const options = token ? {
     headers: { Authorization: `Bearer ${token}` },
   } : undefined
