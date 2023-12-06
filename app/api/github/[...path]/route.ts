@@ -15,32 +15,28 @@ export async function GET(
 ) {
   const githubPath = params.path.join('/')
   const options = httpClientOptions()
-
   const url = new URL(githubPath, 'https://raw.githubusercontent.com')
-  const res = await fetch(url, options)
+  const ext = url.pathname.split('.').pop()
 
-  const status = res.status
-  if (res.status < 200 || res.status >= 400) {
-    throw new Error(`status: ${res.status}, url: ${url.toString()}`)
+  // For security purpose, allowed extensions: json / yaml / yml
+  if (!ext || !(ext in FORMATS)) {
+    return new Response(`Allowed extensions: ${Object.keys(FORMATS).join(', ')}`, { status: 403 })
   }
 
-  const contentType = res.headers.get('Content-Type')
-  const headers = contentType ? {
-    'Content-Type': contentType,
-  } : undefined
+  const res = await fetch(url, options)
+  const status = res.status
+
+  // Error: 4xx / 5xx
+  if (res.status < 200 || res.status >= 400) {
+    return new Response(await res.blob(), { status: res.status })
+  }
 
   // 環境変数 "RESOLVE_ALL_REFS" が "true" の場合にのみ、"$ref" の展開 (一括返還) を行う.
   const data = (process.env.RESOLVE_ALL_REFS !== 'true')
-    ? await res.blob() 
+    ? await res.blob()
     : await resolveAllRefs(await res.text(), url.toString())
 
-  return new Response(
-    data,
-    {
-      status: res.status,
-      headers: headers,
-    },
-  )
+  return new Response(data, { status: res.status })
 }
 
 /**
@@ -55,6 +51,12 @@ function httpClientOptions(): Object | undefined {
   return options
 }
 
+const FORMATS: {[ext: string]: [(s: string) => any, (o: object) => string]} = {
+  'json': [JSON.parse, JSON.stringify],
+  'yaml': [load, dump],
+  'yml': [load, dump],
+}
+
 /**
  * "$ref" で分割された OpenAPI 3.0 spec text を統合して、一つのファイル (text) として返す.
  *
@@ -63,20 +65,14 @@ function httpClientOptions(): Object | undefined {
  * @returns 全ての "$ref" を統合した、OpenAPI 3.0 spec text. (.json / .yaml / .yml)
  */
 async function resolveAllRefs(text: string, rootUrl: string): Promise<string> {
-  const serializer: {[ext: string]: [(s: string) => any, (o: object) => string]} = {
-    'json': [JSON.parse, JSON.stringify],
-    'yaml': [load, dump],
-    'yml': [load, dump],
-  }
-
   // identify extension. (json / yaml / yml)
-  const ext = rootUrl.split('.').pop()
-  if (!ext || !(ext in serializer)) {
+  const ext = new URL(rootUrl).pathname.split('.').pop()
+  if (!ext || !(ext in FORMATS)) {
     throw new Error(`Invalid extension. url: ${rootUrl.toString()}`)
   }
 
   // chooose parser.
-  const [parse, dumps] = serializer[ext]
+  const [parse, dumps] = FORMATS[ext]
   const obj = parse(text)
 
   // call recursively.
@@ -96,9 +92,9 @@ async function resolveAllRefs(text: string, rootUrl: string): Promise<string> {
  * @param [depth=0] 再帰の深さ. 無限ループにならないようにする為に制限を設ける.
  */
 async function resolveRefsRecursively(
-  obj: any, 
-  rootUrl: string, 
-  parse: (s: string) => any, 
+  obj: any,
+  rootUrl: string,
+  parse: (s: string) => any,
   depth = 0,
 ) {
   // Object の key になっている "$ref" しか解決しない.
