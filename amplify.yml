@@ -9,8 +9,8 @@ frontend:
     build:
       commands:
         - echo "GITHUB_TOKEN=$GITHUB_TOKEN" >> .env
-        - echo "RESOLVE_ALL_REFS" >> .env
-        - echo "RESOLVE_ALL_REFS_DEPTH_LIMIT" >> .env
+        - echo "RESOLVE_ALL_REFS=$RESOLVE_ALL_REFS" >> .env
+        - echo "RESOLVE_ALL_REFS_DEPTH_LIMIT=$RESOLVE_ALL_REFS_DEPTH_LIMIT" >> .env
         - npm run build
   artifacts:
     baseDirectory: .next
