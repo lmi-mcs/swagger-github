@@ -99,15 +99,21 @@ async function resolveRefsRecursively(
   parse: (s: string) => any,
   depth = 0,
 ) {
-  // Object の key になっている "$ref" しか解決しない.
-  if (typeof obj !== 'object') {
-    return
-  }
-
   // 多分無限ループになっているので、制限を設ける.
   const limit = parseInt(process.env.RESOLVE_ALL_REFS_DEPTH_LIMIT ?? "30")
   if (depth > limit) {
     throw new Error(`Too deep. depth: ${depth}`)
+  }
+
+  // search in an array.
+  if (Array.isArray(obj)) {
+    obj.forEach(async (child) => await resolveRefsRecursively(child, rootUrl, parse, depth + 1))
+    return
+  }
+
+  // Object の key になっている "$ref" しか解決しない.
+  if (typeof obj !== 'object') {
+    return
   }
 
   // Object の key の捜査. (loop)
